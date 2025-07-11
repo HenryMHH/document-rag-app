@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user: one
+  title: MyString
+  original_filename: MyString
+  file_type: MyString
+  total_pages: 1
+
+two:
+  user: two
+  title: MyString
+  original_filename: MyString
+  file_type: MyString
+  total_pages: 1
