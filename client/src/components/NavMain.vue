@@ -1,10 +1,6 @@
 <script setup lang="ts">
-import { ChevronRight, type LucideIcon } from 'lucide-vue-next'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
+import { ChevronRight, Goal, type LucideIcon } from 'lucide-vue-next'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -15,6 +11,9 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 defineProps<{
   items: {
@@ -28,11 +27,15 @@ defineProps<{
     }[]
   }[]
 }>()
+
+const goToUrl = (url: string) => {
+  router.push(url)
+}
 </script>
 
 <template>
   <SidebarGroup>
-    <SidebarGroupLabel>Platform</SidebarGroupLabel>
+    <SidebarGroupLabel>Navigation</SidebarGroupLabel>
     <SidebarMenu>
       <Collapsible
         v-for="item in items"
@@ -43,10 +46,18 @@ defineProps<{
       >
         <SidebarMenuItem>
           <CollapsibleTrigger as-child>
-            <SidebarMenuButton :tooltip="item.title">
+            <SidebarMenuButton
+              :tooltip="item.title"
+              class="cursor-pointer"
+              :class="{ 'bg-sidebar-accent': item.isActive }"
+              @click="goToUrl(item.url)"
+            >
               <component :is="item.icon" v-if="item.icon" />
               <span>{{ item.title }}</span>
-              <ChevronRight class="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+              <ChevronRight
+                v-if="item.items"
+                class="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
+              />
             </SidebarMenuButton>
           </CollapsibleTrigger>
           <CollapsibleContent>
