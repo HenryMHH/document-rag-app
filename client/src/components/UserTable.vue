@@ -36,15 +36,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import type { Document } from '@/apis/document'
+import type { UserInfo } from '@/apis/auth'
 
-const columnHelper = createColumnHelper<Document>()
+const columnHelper = createColumnHelper<UserInfo>()
 
 const props = defineProps<{
-  documents: Document[]
+  users: UserInfo[]
 }>()
 
-const tableData = computed(() => props.documents)
+const tableData = computed(() => props.users)
 
 const columns = [
   columnHelper.display({
@@ -67,12 +67,12 @@ const columns = [
     enableSorting: false,
     enableHiding: false,
   }),
-  columnHelper.accessor('title', {
+  columnHelper.accessor('name', {
     enablePinning: true,
-    header: 'Title',
-    cell: ({ row }) => h('div', { class: 'capitalize' }, row.getValue('title')),
+    header: 'Name',
+    cell: ({ row }) => h('div', { class: 'capitalize' }, row.getValue('name')),
   }),
-  columnHelper.accessor('original_filename', {
+  columnHelper.accessor('email', {
     header: ({ column }) => {
       return h(
         Button,
@@ -80,30 +80,21 @@ const columns = [
           variant: 'ghost',
           onClick: () => column.toggleSorting(column.getIsSorted() === 'asc'),
         },
-        () => ['Original Filename', h(ChevronsUpDown, { class: 'ml-2 h-4 w-4' })],
+        () => ['Email', h(ChevronsUpDown, { class: 'ml-2 h-4 w-4' })],
       )
     },
-    cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('original_filename')),
+    cell: ({ row }) => h('div', { class: 'lowercase' }, row.getValue('email')),
   }),
-  columnHelper.accessor('file_type', {
-    header: () => h('div', { class: 'text-right' }, 'File Type'),
+  columnHelper.accessor('role', {
+    header: () => h('div', { class: 'text-right' }, 'Role'),
     cell: ({ row }) => {
-      return h('div', { class: 'text-right font-medium' }, row.getValue('file_type'))
+      return h('div', { class: 'text-right font-medium' }, row.getValue('role'))
     },
   }),
-  columnHelper.accessor('total_pages', {
-    header: () => h('div', { class: 'text-right' }, 'Pages'),
+  columnHelper.accessor('avatar_url', {
+    header: () => h('div', { class: 'text-right' }, 'Avatar'),
     cell: ({ row }) => {
-      return h('div', { class: 'text-right font-medium' }, row.getValue('total_pages'))
-    },
-  }),
-  columnHelper.display({
-    id: 'created_at',
-    header: () => h('div', { class: 'text-right' }, 'Created At'),
-    cell: ({ row }) => {
-      const date = row.original.created_at
-      const formattedDate = date ? new Date(date).toLocaleDateString() : '-'
-      return h('div', { class: 'text-right text-sm text-gray-500' }, formattedDate)
+      return h('div', { class: 'text-right font-medium' }, row.getValue('avatar_url'))
     },
   }),
 ]
@@ -157,9 +148,9 @@ const table = useVueTable({
     <div class="flex gap-2 items-center py-4">
       <Input
         class="max-w-sm"
-        placeholder="Filter documents..."
-        :model-value="table.getColumn('title')?.getFilterValue() as string"
-        @update:model-value="table.getColumn('title')?.setFilterValue($event)"
+        placeholder="Filter users..."
+        :model-value="table.getColumn('name')?.getFilterValue() as string"
+        @update:model-value="table.getColumn('name')?.setFilterValue($event)"
       />
       <DropdownMenu>
         <DropdownMenuTrigger as-child>

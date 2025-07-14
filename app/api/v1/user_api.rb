@@ -6,13 +6,13 @@ module V1
       get "/info" do
         user = authenticate_user!
 
-        {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          avatar_url: user.avatar_url,
-          role: user.role.name
-        }
+        present user, with: Entities::User
+      end
+
+      desc "Get all users"
+      get "/all" do
+        users = User.all.includes(:role)
+        present users, with: Entities::User
       end
     end
   end
