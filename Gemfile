@@ -80,7 +80,10 @@ gem "pg"
 gem "neighbor"
 
 gem "faraday"
-gem "googleauth" # 核心用於 Google 驗證
 gem "grape"
-gem "jwt"        # 用於生成你自己的應用程式 JWT
-gem "oauth2"
+gem "grape-entity"
+gem "jwt" # 用於生成你自己的應用程式 JWT
+
+gem "openai", "~> 0.13.0"
+
+gem "pdf-reader"
