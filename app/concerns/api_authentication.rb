@@ -9,41 +9,40 @@ module ApiAuthentication
       end
 
       def authenticate_user
-        # 方法 1: 檢查 Authorization header (推薦用於 API 調用)
-        if request.headers["Authorization"]
-          token = request.headers["Authorization"].split(" ").last
-          return decode_access_token(token)
-        end
+        access_token = request.headers["Authorization"]&.split(" ")&.last
+        raise NoAccessTokenError unless access_token
 
-        # 方法 2: 檢查 cookies 中的 refresh token (用於瀏覽器)
-        return decode_refresh_token(cookies[:lt_agent_rt]) if cookies[:lt_agent_rt].present?
-
-        nil
-      end
-
-      def decode_access_token(token)
-        decoded = JWT.decode(token, ENV["APP_JWT_SECRET"], true, { algorithm: "HS256" })
+        decoded = JwtService.decode(access_token)
         user_id = decoded[0]["user_id"]
         User.find(user_id)
-      rescue JWT::DecodeError, JWT::ExpiredSignature, ActiveRecord::RecordNotFound => e
-        Rails.logger.error "Access token decode error: #{e.message}"
-        nil
+      rescue JWT::ExpiredSignature, NoAccessTokenError
+        error!({ code: "ACCESS_TOKEN_EXPIRED" }, 401) if refresh_token_valid?(cookies[:lt_agent_rt])
       end
 
-      def decode_refresh_token(token)
-        decoded = JWT.decode(token, ENV["APP_JWT_SECRET"], true, { algorithm: "HS256" })
-        refresh_token_jti = decoded[0]["jti"]
-        User.find_by(active_refresh_token_jti: refresh_token_jti)
-      rescue JWT::DecodeError, JWT::ExpiredSignature => e
-        Rails.logger.error "Refresh token decode error: #{e.message}"
-        nil
+      def refresh_token_valid?(token)
+        payload = JwtService.decode(token)
+        user_id = payload[0]["user_id"]
+        jti = payload[0]["jti"]
+
+        user = User.find_by(id: user_id)
+
+        user.active_refresh_token_jti == jti
+      rescue StandardError
+        false
       end
 
       def authenticate_user!
         user = current_user
-        error!({ error: "Unauthorized" }, 401) unless user
+        error!({ code: "UNAUTHORIZED" }, 401) unless user
         user
       end
     end
+  end
+end
+
+# Error classes for different token states
+class NoAccessTokenError < StandardError
+  def initialize(message = "No access token")
+    super(message)
   end
 end

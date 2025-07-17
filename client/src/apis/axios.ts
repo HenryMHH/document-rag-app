@@ -32,32 +32,47 @@ axiosInstance.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config
+    const errorData = error.response.data
+    const errorCode = errorData?.code
 
-    if (error.response.status === 401 && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      errorCode === 'ACCESS_TOKEN_EXPIRED' &&
+      !originalRequest._retry
+    ) {
       originalRequest._retry = true
 
       try {
-        const authStore = useAuthStore()
-
         const { data } = await axios.post(`${apiBaseURL}/api/v1/auth/refresh`, null, {
           withCredentials: true,
         })
-        authStore.setAccessToken(data.access_token)
 
-        return axiosInstance(originalRequest)
-      } catch (refreshError) {
-        console.error('Failed to refresh token:', refreshError)
         const authStore = useAuthStore()
-        authStore.logout()
-
-        const router = useRouter()
-        router.push('/login')
+        authStore.setAccessToken(data.access_token)
+        originalRequest.headers.Authorization = `Bearer ${data.access_token}`
+        return axiosInstance(originalRequest)
+      } catch (refreshError: any) {
+        handleLogout()
         return Promise.reject(refreshError)
       }
     }
 
+    console.log('error=', error)
+
     return Promise.reject(error)
   },
 )
+
+// Helper function to handle logout
+function handleLogout() {
+  const authStore = useAuthStore()
+  authStore.logout()
+
+  // Only redirect if we're not already on the login page
+  if (window.location.pathname !== '/') {
+    const router = useRouter()
+    router.push('/')
+  }
+}
 
 export default axiosInstance

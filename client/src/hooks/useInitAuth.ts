@@ -5,8 +5,8 @@ import { onMounted, ref } from 'vue'
 export const useInitAuth = () => {
   const isInitialized = ref(false)
 
-  try {
-    onMounted(async () => {
+  onMounted(async () => {
+    try {
       const authStore = useAuthStore()
       const isLoggedIn = !!authStore.accessToken
 
@@ -14,12 +14,12 @@ export const useInitAuth = () => {
         const user = await getUserInfoApi()
         authStore.setUser(user)
       }
-    })
-  } catch (error) {
-    console.log(error)
-  } finally {
+    } catch (error) {
+      console.log('error=', error)
+    }
+
     isInitialized.value = true
-  }
+  })
 
   return {
     isInitialized,
