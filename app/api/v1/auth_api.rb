@@ -26,14 +26,16 @@ module V1
 
         user = User.find_or_initialize_by(email: user_info[:email])
 
-        user.provider = "google"
-        user.uid = user_info[:sub]
-        user.name = user_info[:name]
-        user.email = user_info[:email]
-        user.avatar_url = user_info[:picture]
-        user.role_id = Role.find_by(name: "user").id
+        if user.new_record?
+          user.provider = "google"
+          user.uid = user_info[:sub]
+          user.name = user_info[:name]
+          user.email = user_info[:email]
+          user.avatar_url = user_info[:picture]
+          user.role_id = Role.find_by(name: "user").id
 
-        user.save!
+          user.save!
+        end
 
         # Generate token pair
         tokens = generate_token_pair(user)

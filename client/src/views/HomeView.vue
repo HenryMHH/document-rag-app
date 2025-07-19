@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
+import { searchDocumentApi } from '@/apis/document'
 
 interface Message {
   id: string
@@ -40,6 +41,11 @@ const simulateAIResponse = (userMessage: string): string => {
 const sendMessage = async () => {
   if (!userInput.value.trim() || isLoading.value) return
 
+  const response = await searchDocumentApi(userInput.value)
+
+  console.log(response)
+
+  return
   const userMessage = userInput.value.trim()
   const messageId = Date.now().toString()
 

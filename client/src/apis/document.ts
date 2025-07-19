@@ -36,3 +36,9 @@ export const createDocumentApi = async (file: File) => {
 
   return data
 }
+
+export const searchDocumentApi = async (query: string) => {
+  const { data } = await axiosInstance.get(`/document/search?query=${query}`)
+
+  return data
+}

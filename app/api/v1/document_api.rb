@@ -93,6 +93,46 @@ module V1
           document_id: document.id
         }
       end
+
+      desc "Search document"
+      params do
+        requires :query, type: String, desc: "Search query"
+      end
+      get "/search" do
+        query = params[:query]
+
+        query_embedding = nil
+
+        conn = Faraday.new(url: "https://api.openai.com") do |f|
+          f.request :json
+          f.response :json
+          f.adapter Faraday.default_adapter
+        end
+
+        headers = {
+          "Content-Type" => "application/json",
+          "Authorization" => "Bearer #{OPENAI_API_KEY}"
+        }
+
+        response = conn.post("v1/embeddings") do |req|
+          req.headers = headers
+          req.body = {
+            model: "text-embedding-3-small",
+            input: query
+          }
+        end
+
+        if response.success?
+          query_embedding = response.body["data"][0]["embedding"]
+        else
+          puts "API 請求失敗 (Faraday): #{response.status}"
+          puts "錯誤訊息: #{response.body}"
+        end
+
+        results = DocumentChunk.search_by_embedding(query_embedding)
+
+        present results, with: Entities::DocumentChunk
+      end
     end
   end
 end
