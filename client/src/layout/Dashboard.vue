@@ -16,6 +16,19 @@ import {
 } from '@/components/ui/breadcrumb'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import { useAuthStore } from '@/stores/auth'
+import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+onMounted(() => {
+  const authStore = useAuthStore()
+
+  if (authStore?.user?.role !== 'admin') {
+    router.push('/')
+  }
+})
 </script>
 
 <template>

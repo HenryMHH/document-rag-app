@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { ref, nextTick, onMounted } from 'vue'
+import { ref, nextTick, onMounted, watch } from 'vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import { searchDocumentApi } from '@/apis/document'
+import { postChatApi } from '@/apis/chat'
+import { useChatStore } from '@/stores/chat'
+import { useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
 
 interface Message {
   id: string
@@ -38,46 +42,42 @@ const simulateAIResponse = (userMessage: string): string => {
   return responses[Math.floor(Math.random() * responses.length)]
 }
 
+const router = useRouter()
+
+const { chat } = storeToRefs(useChatStore())
+
+// watch(chat, () => {
+//   console.log(chat.value)
+// })
+
+onMounted(() => {
+  const chatID = router.currentRoute.value.params.chatID as string
+
+  if (chatID) {
+    useChatStore().getChatHistory(chatID)
+  }
+})
+
 const sendMessage = async () => {
   if (!userInput.value.trim() || isLoading.value) return
 
-  const response = await searchDocumentApi(userInput.value)
+  const chatID = router.currentRoute.value.params.chatID as string | undefined
 
-  console.log(response)
-
-  return
-  const userMessage = userInput.value.trim()
-  const messageId = Date.now().toString()
-
-  // 添加用戶訊息
-  messages.value.push({
-    id: messageId,
-    content: userMessage,
-    role: 'user',
-    timestamp: new Date(),
+  await useChatStore().postChat({
+    message: userInput.value,
+    chatID,
   })
+
+  if (!chatID) {
+    router.push({
+      name: 'Chat',
+      params: {
+        chatID: chat.value?.id,
+      },
+    })
+  }
 
   userInput.value = ''
-  isLoading.value = true
-
-  // 滾動到底部
-  await nextTick()
-  scrollToBottom()
-
-  // 模擬 API 調用延遲
-  await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 2000))
-
-  // 添加 AI 回覆
-  const aiResponse = simulateAIResponse(userMessage)
-  messages.value.push({
-    id: `${messageId}-response`,
-    content: aiResponse,
-    role: 'assistant',
-    timestamp: new Date(),
-  })
-
-  isLoading.value = false
-  await nextTick()
   scrollToBottom()
 }
 
@@ -101,9 +101,9 @@ const formatTime = (date: Date) => {
   })
 }
 
-onMounted(() => {
-  scrollToBottom()
-})
+// onMounted(() => {
+//   scrollToBottom()
+// })
 </script>
 
 <template>
@@ -118,7 +118,7 @@ onMounted(() => {
     <!-- Chat Messages Area -->
     <div ref="chatContainer" class="flex-1 overflow-y-auto p-4 space-y-4">
       <div
-        v-for="message in messages"
+        v-for="message in chat?.messages"
         :key="message.id"
         class="flex gap-3"
         :class="message.role === 'user' ? 'justify-end' : 'justify-start'"
@@ -146,7 +146,7 @@ onMounted(() => {
                 class="text-xs mt-2 opacity-70"
                 :class="message.role === 'user' ? 'text-blue-100' : 'text-gray-500'"
               >
-                {{ formatTime(message.timestamp) }}
+                <!-- {{ formatTime(message.timestamp) }} -->
               </div>
             </CardContent>
           </Card>

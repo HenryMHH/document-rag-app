@@ -3,12 +3,12 @@ class ChatService
     @openai_client = OpenAI::Client.new(api_key: ENV["OPENAI_API_KEY"])
   end
 
-  def call(user_message)
+  def call(chat, user_message)
     messages = [{ role: "user", content: user_message }]
 
     response = @openai_client.chat.completions.create(
       messages: messages,
-      model: :"gpt-4.1-mini",
+      model: :"gpt-4.1-nano",
       "tools": [
         {
           "type": "function",
@@ -37,36 +37,59 @@ class ChatService
 
     message = response[:choices][0][:message]
 
-    puts "message: #{message}"
-
     if message[:tool_calls]
       tool_call = message[:tool_calls].first
       function_name = tool_call[:function][:name]
       arguments = JSON.parse(tool_call[:function][:arguments])
 
       if function_name == "search_document"
-        # 執行本地函式，現在這個函式變得非常乾淨
         function_result = search_document(arguments["search_message"])
 
+        function_result = "I can't find any information about that" if function_result.strip.empty?
+
+        chat.messages.create(message.to_h)
+
         messages << message
-        messages << {
+
+        tool_message = {
           role: "tool",
           tool_call_id: tool_call[:id],
-          name: function_name,
           content: function_result
         }
 
-        puts "--- [Step 3] Sending tool result back to OpenAI for final answer... ---"
+        messages << tool_message
+
+        chat.messages.create(tool_message.to_h)
+
         final_response = @openai_client.chat.completions.create(
           messages: messages,
-          model: :"gpt-4.1-mini"
+          model: :"gpt-4.1-nano"
         )
-        final_response[:choices][0][:message][:content]
+
+        final_message = final_response[:choices][0][:message]
+
+        messages << final_message
+
+        chat.messages.create(final_message.to_h)
+
+        final_message[:content]
       end
     else
-      puts "--- [Step 2] OpenAI answered directly. ---"
+      chat.messages.create(message.to_h)
+
       message[:content]
     end
+  end
+
+  def get_document_title(user_message)
+    response = @openai_client.chat.completions.create(
+      messages: [
+        { role: "user", content: "please generate a title for the following message: #{user_message}" }
+      ],
+      model: :"gpt-4.1-nano"
+    )
+
+    response[:choices][0][:message][:content]
   end
 
   private

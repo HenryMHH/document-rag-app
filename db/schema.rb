@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_07_13_134451) do
+ActiveRecord::Schema[7.1].define(version: 2025_07_20_103247) do
   create_schema "auth"
   create_schema "extensions"
   create_schema "graphql"
@@ -28,6 +28,14 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_13_134451) do
   enable_extension "supabase_vault"
   enable_extension "uuid-ossp"
   enable_extension "vector"
+
+  create_table "chats", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "title"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_chats_on_user_id"
+  end
 
   create_table "document_chunks", force: :cascade do |t|
     t.bigint "document_id", null: false
@@ -48,6 +56,20 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_13_134451) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_documents_on_user_id"
+  end
+
+  create_table "messages", force: :cascade do |t|
+    t.uuid "chat_id", null: false
+    t.string "role"
+    t.text "content"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "refusal"
+    t.jsonb "annotations", default: [], null: false
+    t.jsonb "tool_calls", default: [], null: false
+    t.string "tool_call_id"
+    t.string "name"
+    t.index ["chat_id"], name: "index_messages_on_chat_id"
   end
 
   create_table "roles", force: :cascade do |t|
@@ -71,7 +93,9 @@ ActiveRecord::Schema[7.1].define(version: 2025_07_13_134451) do
     t.index ["role_id"], name: "index_users_on_role_id"
   end
 
+  add_foreign_key "chats", "users"
   add_foreign_key "document_chunks", "documents"
   add_foreign_key "documents", "users", on_delete: :nullify
+  add_foreign_key "messages", "chats"
   add_foreign_key "users", "roles"
 end

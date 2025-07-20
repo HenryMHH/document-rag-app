@@ -14,6 +14,11 @@ const router = createRouter({
       component: HomeView,
     },
     {
+      path: '/chat/:chatID',
+      name: 'Chat',
+      component: HomeView,
+    },
+    {
       path: '/login',
       name: 'Login',
       component: LoginPage,

@@ -13,5 +13,6 @@ module V1
     mount UserApi
     mount AuthApi
     mount DocumentApi
+    mount ChatApi
   end
 end
