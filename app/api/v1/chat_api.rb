@@ -31,12 +31,21 @@ module V1
                  Chat.find_by(id: params[:chat_id], user_id: current_user.id)
                else
                  title = chat_service.get_document_title(params[:message])
-                 Chat.create(user_id: current_user.id, title: title)
+                 c = Chat.create(user_id: current_user.id, title: title)
+                 c.messages.create(
+                   content: "As a dedicated legal document assistant, your mission is to expertly guide users to the most pertinent legal documents for their needs. My scope is strictly limited to legal document recommendations; I will politely decline to answer any questions outside of this domain.",
+                   role: "developer"
+                 )
+
+                 c
                end
 
-        Message.create(chat_id: chat.id, content: params[:message], role: "user")
+        chat.messages.create(
+          content: params[:message],
+          role: "user"
+        )
 
-        response = chat_service.call(chat, params[:message])
+        response = chat_service.call(chat)
 
         {
           chat_id: chat.id,

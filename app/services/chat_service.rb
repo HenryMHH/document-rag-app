@@ -3,8 +3,52 @@ class ChatService
     @openai_client = OpenAI::Client.new(api_key: ENV["OPENAI_API_KEY"])
   end
 
-  def call(chat, user_message)
-    messages = [{ role: "user", content: user_message }]
+  def call(chat)
+    messages = chat.messages.to_a.map do |message|
+      case message.role
+      # tool message
+      when "tool"
+        {
+          role: message.role,
+          content: message.content,
+          tool_call_id: message.tool_call_id
+        }
+      # developer message
+      when "developer"
+        {
+          role: message.role,
+          content: message.content
+        }
+      # assistant message
+      when "assistant"
+        if message.tool_calls.length.positive?
+          # function call message
+          {
+            role: message.role,
+            content: message.content,
+            refusal: message.refusal,
+            annotations: message.annotations,
+            tool_calls: message.tool_calls
+          }
+        else
+          # assistant message without tool calls
+          {
+            role: message.role,
+            content: message.content,
+            refusal: message.refusal,
+            annotations: message.annotations
+          }
+        end
+      # user message
+      when "user"
+        {
+          role: message.role,
+          content: message.content
+        }
+      end
+    end
+
+    # return messages
 
     response = @openai_client.chat.completions.create(
       messages: messages,
