@@ -1,7 +1,7 @@
 ## Tool stack
-Frontend: Vue3 / Pinia / shadcn-vue
-Backend: Ruby on rails / ruby-openai gem / pdf-reader gem / neighbor gem
-DB: supabase (with vector column)
+* Frontend: Vue3 / Pinia / shadcn-vue
+* Backend: Ruby on rails / ruby-openai gem / pdf-reader gem / neighbor gem
+* DB: supabase (with vector column)
 
 ## Demo
 
