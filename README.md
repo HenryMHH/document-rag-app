@@ -1,5 +1,6 @@
 ## Purpose
-Recommends documents based on user input or requirements.
+1. Recommends documents based on user input or requirements.
+2. Admins can upload documents to **extend** the knowledge base in the **dashboard**.
 
 ## Tool stack
 
