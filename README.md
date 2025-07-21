@@ -1,9 +1,10 @@
-Demo
+## Demo
 
 https://github.com/user-attachments/assets/b8d5dfd5-0d9d-4085-be51-463600e530dc
 
+------
 
-JWT authentication sequence diagram (AT + RT)
+## JWT authentication sequence diagram (AT + RT)
 
 RT is stored in the httponly + samesite cookie
 AT is stored in browser memory (pinia store)
